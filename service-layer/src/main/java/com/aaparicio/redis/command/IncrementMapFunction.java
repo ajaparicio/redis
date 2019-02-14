@@ -16,19 +16,21 @@ public class IncrementMapFunction<K> implements IncrementFunction<K> {
 
     @Override
     public Integer apply(K key) {
-        AtomicInteger result;
-        Value<AtomicInteger> value = (Value<AtomicInteger>) map.get(key);
+        Integer result;
+        Value value = (Value) map.get(key);
         if (value != null) {
             if (value.hasExpired()) {
                 throw new ExpirationException(String.format("The key has expired [%s]", value));
             } else {
-                result = value.getValue();
+                result = Integer.valueOf(value.getValue().toString());
+                result++;
             }
         } else {
-            result = new AtomicInteger(0);
-            value = new Value<>(result);
-            map.put(key, value);
+            result = 1;
         }
-        return result.incrementAndGet();
+        value = new Value<>(result);
+        map.put(key, value);
+
+        return result;
     }
 }

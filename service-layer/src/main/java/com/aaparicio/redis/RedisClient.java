@@ -37,14 +37,24 @@ public class RedisClient<K, V> {
     }
 
     private V set(Entry<K, V> entry) {
-        SetMapConsumer<K, V> command = new SetMapConsumer<>(map);
-        command.accept(entry);
-        return entry.getValue().getValue();
+        readWriteLock.writeLock().lock();
+        try {
+            SetMapConsumer<K, V> command = new SetMapConsumer<>(map);
+            command.accept(entry);
+            return entry.getValue().getValue();
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
     }
 
     public V get(K key) {
-        GetMapFunction<K, V> command = new GetMapFunction<>(map);
-        return command.apply(key);
+        readWriteLock.readLock().lock();
+        try {
+            GetMapFunction<K, V> command = new GetMapFunction<>(map);
+            return command.apply(key);
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
     }
 
     public int del(K... keys) {
@@ -56,21 +66,36 @@ public class RedisClient<K, V> {
     }
 
     public int del(K key) {
-        DeleteMapFunction<K> command = new DeleteMapFunction<>(map);
-        if (command.apply(key)) {
-            return 1;
-        } else {
-            return 0;
+        readWriteLock.writeLock().lock();
+        try {
+            DeleteMapFunction<K> command = new DeleteMapFunction<>(map);
+            if (command.apply(key)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
         }
     }
 
     public int incr(K key) {
-        IncrementMapFunction<K> command = new IncrementMapFunction<>(map);
-        return command.apply(key);
+        readWriteLock.writeLock().lock();
+        try {
+            IncrementMapFunction<K> command = new IncrementMapFunction<>(map);
+            return command.apply(key);
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
     }
 
     public int dbsize() {
-        return new DBSizeMapSupplier(map).get();
+        readWriteLock.readLock().lock();
+        try {
+            return new DBSizeMapSupplier(map).get();
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
     }
 
     public boolean zadd(K key, int scored, V member) {

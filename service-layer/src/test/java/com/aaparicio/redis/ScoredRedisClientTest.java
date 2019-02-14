@@ -150,7 +150,7 @@ public class ScoredRedisClientTest {
         assertEquals(strings.size(), 3);
     }
 
-    @Test (expectedExceptions = IndexOutOfBoundsException.class)
+    @Test
     public void testZRangeOutOfIOndex() {
         String anyKey = "key";
         int firstScore = -1;
@@ -160,7 +160,10 @@ public class ScoredRedisClientTest {
 
         redisClient.zadd(anyKey, secondScore, secondMember);
         redisClient.zadd(anyKey, firstScore, firstMember);
-        redisClient.zrange(anyKey, 0, 5);
+        Collection<String> strings = redisClient.zrange(anyKey, 0, 5);
+
+        assertNotNull(strings);
+        assertEquals(strings.size(), 2);
     }
 
     @Test

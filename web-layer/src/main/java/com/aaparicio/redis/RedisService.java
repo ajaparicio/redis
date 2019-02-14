@@ -1,8 +1,6 @@
 package com.aaparicio.redis;
 
-import java.time.Duration;
-import java.util.Collection;
-
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.MatrixParam;
@@ -13,57 +11,83 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import java.time.Duration;
+import java.util.stream.Collectors;
 
 @Path("/redis")
-public interface RedisService {
+public class RedisService {
 
-    @PUT
-    @Path("/set/{key}")
-    @Produces(MediaType.TEXT_PLAIN)
-    boolean set(@PathParam("key") String key, @QueryParam("value") String value);
+    private final RedisClient<String, String> client;
 
-    @PUT
-    @Path("/set/{key}")
+    public RedisService() {
+        this.client = new RedisClientFactory().getBasicInstance();
+    }
+
+    @POST
+    @Path("/keys/{key}")
+    @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
-    boolean set(@PathParam("key") String key, @QueryParam("value") String value, @QueryParam("expiration") Duration expiration);
+    public boolean set(@PathParam("key") String key, String value, @MatrixParam("expiration") Long expirationInMillis) {
+        if (expirationInMillis != null) {
+            return client.set(key, value, Duration.ofMillis(expirationInMillis));
+        } else {
+            return client.set(key, value);
+        }
+    }
 
     @GET
-    @Path("/get/{key}")
+    @Path("/keys/{key}")
     @Produces(MediaType.TEXT_PLAIN)
-    String get(@PathParam("key") String key);
+    public String get(@PathParam("key") String key) {
+        return client.get(key);
+    }
 
     @DELETE
-    @Path("/del/{key}")
+    @Path("/keys/{key}")
     @Produces(MediaType.TEXT_PLAIN)
-    int del(@PathParam("key") String key);
+    public int del(@PathParam("key") String key) {
+        return client.del(key);
+    }
 
     @GET
     @Path("/dbsize")
     @Produces(MediaType.TEXT_PLAIN)
-    int dbsize();
+    public int dbsize() {
+        return client.dbsize();
+    }
 
     @PUT
-    @Path("/incr")
+    @Path("/incr/keys/{key}")
     @Produces(MediaType.TEXT_PLAIN)
-    int incr(@PathParam("key") String key);
+    public int incr(@PathParam("key") String key) {
+        return client.incr(key);
+    }
 
     @PUT
-    @Path("/zadd")
+    @Path("/zadd/keys/{key}")
     @Produces(MediaType.TEXT_PLAIN)
-    boolean zadd(@PathParam("key") String key, @QueryParam("score") int score, @QueryParam("member") String member);
+    public boolean zadd(@PathParam("key") String key, @MatrixParam("score") int score, @MatrixParam("member") String member) {
+        return client.zadd(key, score, member);
+    }
 
     @GET
-    @Path("/zcard/{key}")
+    @Path("/zcard/keys/{key}")
     @Produces(MediaType.TEXT_PLAIN)
-    int zcard(@PathParam("key") String key);
+    public int zcard(@PathParam("key") String key) {
+        return client.zcard(key);
+    }
 
     @GET
-    @Path("/zrank/{key}")
+    @Path("/zrank/keys/{key}")
     @Produces(MediaType.TEXT_PLAIN)
-    int zrank(@PathParam("key") String key, @QueryParam("member") String member);
+    public int zrank(@PathParam("key") String key, @MatrixParam("member") String member) {
+        return client.zrank(key, member);
+    }
 
     @GET
-    @Path("/zrange/{key}")
+    @Path("/zrange/keys/{key}")
     @Produces(MediaType.TEXT_PLAIN)
-    Collection<String> zrange(@PathParam("key") String key, @QueryParam("start")int start, @QueryParam("end") int end);
+    public String zrange(@PathParam("key") String key, @QueryParam("start")int start, @QueryParam("end") int end) {
+        return client.zrange(key, start, end).stream().collect(Collectors.joining(" "));
+    }
 }

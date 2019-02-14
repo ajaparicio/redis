@@ -192,9 +192,9 @@ public class RedisClientTest {
     @Test
     public void testIncrExistedValue() {
         String anyKey = "one";
-        AtomicInteger anyValue = new AtomicInteger(17);
+        String anyValue = "17";
 
-        RedisClient<String, AtomicInteger> redisClient = new RedisClient<>();
+        RedisClient<String, String> redisClient = new RedisClient<>();
         redisClient.set(anyKey, anyValue);
 
         int result = redisClient.incr(anyKey);
@@ -202,10 +202,10 @@ public class RedisClientTest {
         assertEquals(result, 18);
     }
 
-    @Test (expectedExceptions = ClassCastException.class)
+    @Test (expectedExceptions = NumberFormatException.class)
     public void testIncrWrongValue() {
         String anyKey = "one";
-        String anyValue = "1";
+        String anyValue = "srt";
 
         redisClient.set(anyKey, anyValue);
         redisClient.incr(anyKey);

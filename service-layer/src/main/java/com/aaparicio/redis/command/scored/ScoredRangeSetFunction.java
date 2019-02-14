@@ -19,9 +19,7 @@ public class ScoredRangeSetFunction<V> implements ScoredRangeFunction<V> {
 
     @Override
     public Collection<V> apply(Range range) {
-        List<ScoredValue<V>> sortedList = new ArrayList<>(set);
-        return sortedList.subList(getStart(range), getEnd(range)).
-                stream().map(value -> value.getValue()).collect(Collectors.toList());
+        return set.stream().limit(getEnd(range)).skip(getStart(range)).map(value -> value.getValue()).collect(Collectors.toList());
     }
 
     private int getStart(Range range) {
